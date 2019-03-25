@@ -2,7 +2,8 @@ package main
 
 import (
 	"log"
-	"score"
+
+	"git.iptq.io/nso/score"
 
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
