@@ -5,30 +5,32 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/jinzhu/gorm"
+	"git.iptq.io/nso/common"
 )
 
 type ScoreServer struct {
 	config *Config
-	db     *gorm.DB
+	db     *common.DB
+	rds    *common.RedisAPI
 	router http.Handler
 }
 
 func NewInstance(config *Config) (score *ScoreServer, err error) {
 	// db
-	db, err := gorm.Open(config.DbProvider, config.DbConnection)
+	db, err := common.ConnectDB(config.DbProvider, config.DbConnection)
 	if err != nil {
 		return
 	}
 
 	// router
-	router := handler()
 
 	score = &ScoreServer{
 		config: config,
 		db:     db,
-		router: router,
 	}
+
+	router := score.Handlers()
+	score.router = router
 	return
 }
 
