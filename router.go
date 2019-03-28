@@ -1,25 +1,13 @@
 package score
 
 import (
-	"fmt"
-	"net/http"
-	"os"
-
-	gorrilaHandlers "github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo"
 )
 
-func IndexHandler(w http.ResponseWriter, r *http.Request) {
-}
+func (score *ScoreServer) router(web *echo.Echo) {
+	web.POST("/web/osu-submit-modular-selector.php", score.SubmitModularHandler)
+	web.GET("/web/osu-osz2-getscores.php", score.GetScores)
 
-func (score *ScoreServer) Handlers() (router http.Handler) {
-	r := mux.NewRouter()
-	r.HandleFunc("/", IndexHandler)
-	r.HandleFunc("/web/osu-submit-modular-selector.php", Hwrapper(score.SubmitModularHandler))
-	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// body, _ := ioutil.ReadAll(r.Body)
-		fmt.Println("request", r.URL)
-	})
-	router = gorrilaHandlers.LoggingHandler(os.Stdout, r)
-	return
+	web.GET("/web/osu-osz2-bmsubmit-getid.php", score.Osz2BmsubmitGetid)
+	web.POST("/web/osu-osz2-bmsubmit-upload.php", score.Osz2BmsubmitUpload)
 }

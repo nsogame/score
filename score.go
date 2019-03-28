@@ -2,17 +2,17 @@ package score
 
 import (
 	"log"
-	"net/http"
-	"time"
 
-	"git.iptq.io/nso/common"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
+	"github.com/nsogame/common"
 )
 
 type ScoreServer struct {
 	config *Config
 	db     *common.DB
 	rds    *common.RedisAPI
-	router http.Handler
+	web    *echo.Echo
 }
 
 func NewInstance(config *Config) (score *ScoreServer, err error) {
@@ -23,14 +23,20 @@ func NewInstance(config *Config) (score *ScoreServer, err error) {
 	}
 
 	// router
+	web := echo.New()
+	web.Debug = config.Debug
+
+	web.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Format: "method=${method}, uri=${uri}, status=${status}\n",
+	}))
+	web.Use(middleware.Recover())
 
 	score = &ScoreServer{
 		config: config,
 		db:     db,
+		web:    web,
 	}
-
-	router := score.Handlers()
-	score.router = router
+	score.router(web)
 	return
 }
 
@@ -40,13 +46,5 @@ func (score *ScoreServer) close() {
 
 func (score *ScoreServer) Run() {
 	defer score.close()
-	log.Println("starting...")
-	server := &http.Server{
-		Handler: score.router,
-		Addr:    score.config.BindAddr,
-
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
-	}
-	log.Fatal(server.ListenAndServe())
+	log.Fatal(score.web.Start(score.config.BindAddr))
 }

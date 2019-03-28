@@ -4,11 +4,11 @@ import (
 	"crypto/cipher"
 	"encoding/base64"
 	"fmt"
-	"net/http"
 	"strings"
 
-	"git.iptq.io/nso/common"
 	"github.com/gorilla/schema"
+	"github.com/labstack/echo"
+	"github.com/nsogame/common"
 )
 
 var (
@@ -31,14 +31,15 @@ type ScoreSubmission struct {
 	X   string `schema:"x"`
 }
 
-func (score *ScoreServer) SubmitModularHandler(w http.ResponseWriter, r *http.Request) (err error) {
-	err = r.ParseMultipartForm(MaxMemory)
+func (score *ScoreServer) SubmitModularHandler(c echo.Context) (err error) {
+	// files := c.MultipartForm()
+	form, err := c.FormParams()
 	if err != nil {
 		return
 	}
 
 	var data ScoreSubmission
-	err = Decoder.Decode(&data, r.MultipartForm.Value)
+	err = Decoder.Decode(&data, form)
 	if err != nil {
 		return
 	}
@@ -72,7 +73,7 @@ func (score *ScoreServer) SubmitModularHandler(w http.ResponseWriter, r *http.Re
 	username := strings.Trim(scoreData[1], " ")
 
 	// pull user out of the db
-	user, err := score.db.GetUser(username)
+	user, err := score.db.GetUserByName(username)
 	if err != nil {
 		return
 	}
